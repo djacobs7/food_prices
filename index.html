@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+ <html>
+   <head>
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+ 
+     <script src="http://d3js.org/d3.v2.js"></script>
+     <script src="jquery-1.8.0.min.js"></script>
+     <title>Food Prices</title>
+
+
+<style>
+.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+</style>
+<script>
+
+
+$(document).ready(function(){
+ d3.text("food_prices.csv", function(unparsedData)
+  {
+		var yValueKey = "ממוצע_שווקים_2";    
+
+		var leftPadding = 20;
+	
+   var data = d3.csv.parse(unparsedData).map( function(o){
+		for ( var key in o ){
+			o[key] = o[key].trim();
+		}
+		o[yValueKey] = parseFloat( o[yValueKey] );
+		
+		o["date"]  = new Date(Date.parse(o["חודש"],"yyyy/MM"));
+		
+		return o;
+	}).filter( function(o ){
+		return !isNaN( o[yValueKey] );
+	});
+    
+
+	var foods = d3.nest()
+		.key( function(d){ return d["מין"] + '|' + d["זן"] } )
+		.entries( data );
+		
+
+	foods.forEach( function( v ){
+		$("#combobox").append( new Option( v['key'] ) );		
+	});
+
+
+   //Create the SVG graph.
+   var svg = d3.select("body").append("svg").attr("width", "100%").attr("height", "100%");
+
+	function filterData( data, shuk, type, strain ){
+		return data.filter( function( item ){
+			return ( shuk == item["שוק"] &&
+					type == item["מין"] && 
+					strain == item["זן"] )
+		});
+	}
+	
+avocadoData = filterData.apply( {}, [data,"קמעוני חיפה","אבוקדו", "האס" ] );
+
+   //Add data to the graph and call enter.
+   var dataEnter = svg.selectAll(".currentItem").data(avocadoData).enter();
+    
+   //The height of the graph (without text).
+   var graphHeight = 450;
+   
+
+
+	var graphWidth = 500;
+   //The width of each bar.
+   var barWidth = 10;
+    
+   //The distance between each bar.
+   var barSeparation = 1;
+    
+   //The maximum value of the data.
+   var maxData = 0;
+    
+	for ( var i = 0 ; i < avocadoData.length; i++ ){
+		var datum = avocadoData[ i ];
+		if ( datum[yValueKey] > maxData ){
+			maxData = datum[yValueKey];
+		}
+	}
+
+   //The actual horizontal distance from drawing one bar rectangle to drawing the next.
+   var horizontalBarDistance = barWidth + barSeparation;
+    
+    
+   //The horizontal and vertical offsets of the text that displays each bar's value.
+   var textXOffset = horizontalBarDistance / 2 - 12;
+   var textYOffset = 20;
+    
+var startDate = new Date( Date.parse( "2009/12","yyyy/MM"));
+var endDate = new Date( Date.parse( "2012/12","yyyy/MM"));
+var timeAxis = d3.time.scale().domain( [ startDate, endDate ] ).range( [0, graphWidth] );
+
+var yAxis = d3.scale.linear().domain( [ 0, maxData ] ).range([ graphHeight, 0 ]); 
+
+function make_x_axis() {
+  return d3.svg.axis()
+      .scale( timeAxis )
+      .orient("bottom")
+      .ticks(d3.time.months, 6)
+	  .tickFormat(d3.time.format("%b-%y"))
+	  .tickSize( 4, 1 )
+}
+
+
+function make_y_axis(){
+	return d3.svg.axis().scale( yAxis ).orient("left").ticks(5);
+}
+
+    
+   //The value to multiply each bar's value by to get its height.
+   var barHeightMultiplier = graphHeight / maxData;
+    
+   //The actual Y position of every piece of text.
+   var textYPosition = graphHeight + textYOffset;
+
+   //Draw the bars.
+	dataEnter.append("circle").attr("cx", function(d, i){
+		return timeAxis( d["date"] ) + leftPadding;
+	}).attr("cy", function(d){
+		return graphHeight - d[yValueKey] * barHeightMultiplier;
+   	}).attr( "r", function(d){
+		return 5;
+	}).attr("fill", function(d) {
+		return "rgb(0, 0, " + Math.floor(d[yValueKey] * 25) + ")";
+	}).attr("class", "currentItem")
+	
+	dataEnter.append("rect").attr("width", function(d){
+		return 1;
+	}).attr("height", function(d){
+		return d[yValueKey] * barHeightMultiplier;
+	}).attr("x", function(d){
+		return timeAxis( d["date"] ) + leftPadding
+	}).attr("y", function(d){
+		return graphHeight - d[yValueKey] * barHeightMultiplier;
+	}).attr("class", "currentItem");
+
+
+
+	
+
+
+// attr("width", function(d)
+//    {
+//     return barWidth;
+//    }).attr("height", function(d)
+//    {
+// return d[yValueKey] * barHeightMultiplier;
+//    });
+
+
+svg.append("svg:g").attr("transform", "translate(" + leftPadding+", " + textYPosition + ")").attr("class", "axis").call( make_x_axis() );
+
+svg.append("svg:g").attr("class", "axis").attr("transform", "translate(" + leftPadding + ",0)").call(make_y_axis());
+
+
+
+   // dataEnter.append("text").text(function(d)
+   //  {
+   //   return d["date"];
+   //  }).attr("x", function(d, i)
+   //  {
+   //   return timeAxis( d["date"] ) + textXOffset;
+   //  }).attr("y", textYPosition);
+ 
+
+
+
+});
+});
+				
+
+
+</script>
+ 
+   </head>
+   <body>
+	
+		<select id="combobox">
+		</select>
+
+    </body>
+  </html>
