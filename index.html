@@ -1,66 +1,467 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Food prices by djacobs7</title>
+<!DOCTYPE html>
+ <html>
+   <head>
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+ 
+     <script src="http://d3js.org/d3.v2.js"></script>
+     <script src="jquery-1.8.0.min.js"></script>
+     <title>Food Prices</title>
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
-        <h1>Food prices</h1>
-        <p>Sample project with d3</p>
+<link rel="stylesheet" href="stylesheets/styles.css">
+<style>
 
-        <p class="view"><a href="https://github.com/djacobs7/food_prices">View the Project on GitHub <small>djacobs7/food_prices</small></a></p>
+/*body {
+	font-family: Verdana;
+}
+*/
+.rtl {
+	direction: rtl;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+
+.line {
+  fill: none;
+  stroke: #000;
+  stroke-width: 2px;
+}
+.currentItem:hover{
+	fill: brown;
+}
+/*
+#content {
+	width: 80%;
+	margin: auto;
+}
+*/
+/*.metro {
+  display: inline-block;
+  padding: 10px;
+  margin: 3px;
+  background: #08C;
+
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+
+float:left;
+clear:both;
+
+direction: rtl;
+}*/
+</style>
+<script>
 
 
-        <ul>
-          <li><a href="https://github.com/djacobs7/food_prices/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/djacobs7/food_prices/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/djacobs7/food_prices">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
-        <h3>Welcome to GitHub Pages.</h3>
+$(document).ready(function(){
+ d3.text("food_prices.csv", function(unparsedData)
+  {
+	
+	var monthNames = [ "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December" ];
+	
+	//---------
+	//statistics
+	
+	function meanPrice( arr ){
+		var filtered = arr.filter( function(a ){ return !isNaN( a ) } );
+		return filtered.reduce( function(acc,x){ return acc+x }, 0 ) / filtered.length;
+	}
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+  function medianPrice( arr ){
+		var filtered = arr.filter( function(a ){ return !isNaN( a ) } );
+		var sorted = filtered.sort();
+		return sorted[ Math.floor( sorted.length / 2 ) ];
+  }
+	
+	function normalize( arr ){
+		var mean = meanPrice( arr );
+		var noBias =  arr.map( function(k ){ return k - mean; } )
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+		var min = Math.min.apply({}, noBias);
+		var max = Math.max.apply({}, noBias);
+		
+		return noBias.map( function(k){ return k / Math.max( min, max ) } ) ;
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+	}
+	
+	function meanMonthlyValue( arr ){
+ 		var result = d3.nest().
+			key( function(d){ return d['date'].getMonth() } ).
+			rollup( function( a ){
+				return meanPrice(  a.map( function( k ){ return k[yValueKey] } ) );
+			}).
+			entries( arr ).
+			sort( function(a,b){ 
+				if ( a.values < b.values ){
+					return -1;
+				}
+				if ( a.values > b.values ){
+					return 1;
+				}
+				return 0
+			});
+			
+		return result;
+	}
+	//-------
+	
+	var markets = ["ממוצע_שופרסל","ממוצע_חנויות","ממוצע_שווקים_1","ממוצע_שווקים_2"]
+	
+	var yValueKey = markets[0];
+//		var yValueKey = "ממוצע_שווקים_2";    
 
-<h3>Designer Templates</h3>
-
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
-
-<h3>Rather Drive Stick?</h3>
-
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
-
-<h3>Authors and Contributors</h3>
-
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
-
-<h3>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-      </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/djacobs7">djacobs7</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
-      </footer>
-    </div>
-    <script src="javascripts/scale.fix.js"></script>
+		var leftPadding = 20;
+	
+   var data = d3.csv.parse(unparsedData).map( function(o){
+		for ( var key in o ){
+			o[key] = o[key].trim();
+		}
+		for ( var i = 0; i < markets.length; i++ ){
+			var marketKey = markets[i];
+			o[marketKey] = parseFloat( o[marketKey] );
+		}
+		o["date"]  = new Date(Date.parse(o["חודש"],"yyyy/MM"));
+		
+		o["name"] = o["שם"]
+		return o;
+	});
     
-  </body>
-</html>
+
+	var foods = d3.nest()
+		.key( function(d){ return d["מין"] + '|' + d["זן"] } )
+		.entries( data );
+		
+
+	foods.forEach( function( v ){
+		$("#typecombobox").append( new Option( v['key'] ) );		
+	});
+	
+	var locations =["קמעוני תל-אביב","קמעוני ירושלים","קמעוני חיפה"];
+	locations.forEach( function( v ){
+		$("#locationcombobox").append( new Option( v ) );
+	});
+	
+	markets.forEach( function( v ){
+		$("#marketscombobox").append( new Option( v ) );
+	});
+	
+	$("#marketscombobox").change( function( evt ){
+		yValueKey = evt.target.value;
+		redraw();
+	});
+	
+	$("#locationcombobox").change( function(evt){
+		var comboBoxValue = evt.target.value;
+		shuk = comboBoxValue;
+		dataToDraw = filterData.apply({}, [data, shuk, type, strain] );
+		redraw();
+	});
+	
+	$("#typecombobox").change( function(evt){
+		var comboBoxValue = evt.target.value;
+		var arr = comboBoxValue.split("|");
+		
+		type = arr[0];
+		strain = arr[ 1 ];
+		dataToDraw = filterData.apply({}, [data, shuk, type, strain] );
+	
+		redraw();
+	});
+
+   //Create the SVG graph.
+   var svg = d3.select("#chart").append("svg").attr("width", "100%").attr("height", "450px");
+
+	function filterData( data, shuk, type, strain ){
+		return data.filter( function( item ){
+			return ( shuk == item["שוק"] &&
+					type == item["מין"] && 
+					strain == item["זן"] 
+				)
+		});
+	}
+	
+	//var shuk = "קמעוני חיפה";
+	
+	var shuk = locations[ 0 ];
+	var type = "אבוקדו";
+	var strain = "האס";
+	
+//dataToDraw = filterData.apply( {}, [data,"קמעוני חיפה","אבוקדו", "האס" ] );
+dataToDraw = filterData.apply( {}, [ data, shuk, type, strain ] );
+   //Add data to the graph and call enter.
+    
+   //The height of the graph (without text).
+   var graphHeight = 400;
+   
+
+
+	var graphWidth = 500;
+   //The width of each bar.
+   var barWidth = 10;
+    
+   //The distance between each bar.
+   var barSeparation = 1;
+    
+   //The actual horizontal distance from drawing one bar rectangle to drawing the next.
+   var horizontalBarDistance = barWidth + barSeparation;
+    
+    
+   //The horizontal and vertical offsets of the text that displays each bar's value.
+   var textXOffset = horizontalBarDistance / 2 - 12;
+   var textYOffset = 20;
+
+   //The actual Y position of every piece of text.
+   var textYPosition = graphHeight + textYOffset;
+
+
+
+
+	function redraw(){
+
+		dataToDraw = dataToDraw.filter( function(o ){
+			return !isNaN( o[yValueKey] );
+		});
+		
+		dataToDraw = dataToDraw.sort( function(a,b){ 
+			if (a.date < b.date ) return -1; 
+			if ( a.date > b.date ) return 1;
+			return 0 } );
+
+
+
+
+
+		//The maximum value of the data.
+		var maxData = 0;
+		for ( var i = 0 ; i < dataToDraw.length; i++ ){
+			var datum = dataToDraw[ i ];
+			if ( datum[yValueKey] > maxData ){
+				maxData = datum[yValueKey];
+			}
+		}
+
+		var startDate = new Date( Date.parse( "2008/06","yyyy/MM"));
+		var endDate = new Date( Date.parse( "2012/12","yyyy/MM"));
+		var timeAxis = d3.time.scale().domain( [ startDate, endDate ] ).range( [0, graphWidth] );
+
+		var yAxis = d3.scale.linear().domain( [ 0, maxData ] ).range([ graphHeight, 0 ]); 
+
+
+		var dataDraw = svg.selectAll("circle").data(dataToDraw, function key(d){ return d["date"];  });
+		
+		var titles = svg.selectAll("title").data(dataToDraw, function key(d){ return d["date"];  });
+		
+		
+		
+		var meanMonthlyValues = meanMonthlyValue( dataToDraw );
+		$("#choice_specific").html(
+			dataToDraw[0].name + " " + "<br/>" +
+			"mean price: " + meanPrice( dataToDraw.map( function(k){ return k[yValueKey] } ) ).toFixed(2) + "₪<br/>   " +
+			"median price: " + medianPrice( dataToDraw.map( function(k){ return k[yValueKey] } ) ).toFixed(2) + "₪<br/>" +
+			"best month: " + monthNames[meanMonthlyValues[0].key] + " " + meanMonthlyValues[0].values.toFixed(2) + "₪ <br/>" +
+			"worst month: " + monthNames[meanMonthlyValues[meanMonthlyValues.length-1].key] + " " + meanMonthlyValues[meanMonthlyValues.length-1].values.toFixed(2) + "₪"
+			
+		);
+			
+			
+if ( true ){
+
+
+		var dataEnter = dataDraw.enter();
+		
+		dataDraw.exit().remove();
+
+
+	function make_x_axis() {
+	  return d3.svg.axis()
+	      .scale( timeAxis )
+	      .orient("bottom")
+	      .ticks(d3.time.months, 6)
+		  .tickFormat(d3.time.format("%b-%y"))
+		  .tickSize( 4, 1 )
+	}
+
+
+	function make_y_axis(){
+		return d3.svg.axis().scale( yAxis ).orient("left").ticks(5);
+	}
+	
+	function updateInformation(date, value, name){
+		$("#point_specific").html(
+				
+				monthNames[ date.getMonth() ] + ' ' +date.getFullYear() +
+				"\n " + value + "₪"
+				
+		);
+	}
+	
+	function clearInformation(){
+		$("#point_specific").html("-");
+	}
+
+    
+	   //The value to multiply each bar's value by to get its height.
+	   var barHeightMultiplier = graphHeight / maxData;
+    
+		dataDraw.transition().duration(1000)
+			.attr("cx", function(d, i){
+				return timeAxis( d["date"] ) + leftPadding;
+			}).attr("cy", function(d){
+				return yAxis( d[yValueKey ] );//graphHeight - d[yValueKey] * barHeightMultiplier;
+	   		}).attr("fill", function(d) {
+			return "rgb(0, 0, " + Math.floor(d[yValueKey] * 25) + ")";
+			});
+
+			titles.transition().text(function(d, i) { 
+				return d["date"].getMonth() + '-' +d["date"].getFullYear() +
+						"\n " + d[yValueKey] + "₪" + 
+						"\n " + d["name"]
+			});
+
+		dataEnter.append("circle").attr("cx", function(d, i){
+			return timeAxis( d["date"] ) + leftPadding;
+		}).attr("cy", function(d){
+			return yAxis( d[yValueKey ] );//graphHeight - d[yValueKey] * barHeightMultiplier;
+	   	}).attr( "r", function(d){
+			return 5;
+		}).attr("fill", function(d) {
+			return "rgb(0, 0, " + Math.floor(d[yValueKey] * 25) + ")";
+		}).on("mouseover", function(d){  
+			updateInformation(d["date"],d[yValueKey],d["name"]);
+		}).on("mouseout", function(d){
+			clearInformation();
+		}).attr("class", "currentItem")
+		.append("svg:title")
+          .text(function(d, i) { 
+				return d["date"].getMonth() + '-' +d["date"].getFullYear() +
+						"\n " + d[yValueKey] + "₪" + 
+						"\n " + d["name"]
+			});
+		// 	
+		// dataEnter.append("rect").attr("width", function(d){
+		// 	return 1;
+		// }).attr("height", function(d){
+		// 	return d[yValueKey] * barHeightMultiplier;
+		// }).attr("x", function(d){
+		// 	return timeAxis( d["date"] ) + leftPadding
+		// }).attr("y", function(d){
+		// 	return graphHeight - d[yValueKey] * barHeightMultiplier;
+		// }).attr("class", "currentItem");
+		
+		svgXAxis.call( make_x_axis() );
+		svgYAxis.call( make_y_axis() );
+		
+}
+	// 		var vis = d3.select("#chart").append("svg:svg").attr("width", graphWidth).attr("height", graphHeight );
+	// vis.selectAll("path.line").data([ dataToDraw ]).enter().append("svg:path").
+	// attr("d", d3.svg.line()
+	// 	.x(function(d){  return timeAxis( d["date"] )})
+	// 	.y(function(d){ return yAxis( d[yValueKey ] ) })
+	//  	);
+		}
+	
+	//this is perfectly good code that should be ins	ide the redraw function
+var svgXAxis = svg.append("svg:g").attr("transform", "translate(" + leftPadding+", " + textYPosition + ")").attr("class", "axis");
+
+var svgYAxis = svg.append("svg:g").attr("class", "axis").attr("transform", "translate(" + leftPadding + ",0)");
+
+	
+	redraw();
+
+
+
+
+
+
+
+});
+});
+				
+
+
+</script>
+ 
+   </head>
+   <body>
+	
+	<div class="wrapper">
+		<header>
+			<h1>
+				Food Prices in Israel
+			</h1>
+			<p>
+			Type: <select id="typecombobox">
+			</select><br/>
+			Location: <select id="locationcombobox">
+			</select></br>
+			Market: <select id="marketscombobox">
+			</select>
+			<div id="information">
+				<div id="choice_specific">
+				</div>
+				<div id="point_specific" >
+				</div>
+			</div>
+			</p>
+			<p>
+				Go ahead and play around with the choices for <strong>type</strong>,  <strong>location</strong> and  <strong>market</strong> to see food prices at different markets throughout Israel over the last 3 years.
+			</p>
+			<p>You can also see for yourself if shopping in Jerusalem is cheaper than in Tel Aviv; if going to the shuk is really that much cheaper than going to supersal; and which is the best month for buying watermelon</p>
+
+
+		</header>
+		<section>
+			<div id="chart"></div>
+			
+			<h3>What is this?</h3>			
+			<p>
+				Above is a graph, showing price versus time for the food at the market selected in the upper left.  For example, it could show you how much seedless watermelon cost at the Supersal in Tel-Aviv in July 2011.</p><p>
+				Every month or so the Israeli department of argiculture goes throughout the country buying vegetables at various markets throughout the country. 
+			
+				They post this data publically here <a href="http://data.gov.il/dataset/346">data.gov.il</a>.
+				 The data for these graphs was last July 2012.
+			</p>
+			
+			<h3> What should I do?</h3>
+			
+			<p>
+				Go ahead and play around with the choices for <strong>type</strong>,  <strong>location</strong> and  <strong>market</strong> to see food prices at different markets throughout Israel over the last 3 years.
+			</p>
+			<p>
+				You will notice that soon foods behave periodically and some do not.  The seedless watermelon is very consistent year to year; eggplant is much less so. 
+				 Use this to figure out when a fruit or vegetable of your choice is in season.
+			</p>
+			<p> You can also see for yourself if shopping in Jerusalem is cheaper than in Tel Aviv; or if going to the shuk is really that much cheaper than going to supersal.
+			<h3>Whats up with the sweet potato?</h3>
+			<p>If you look at sweet potato prices, you will see they appear to grow exponentially over the last few months.  I have no theory for why this is, but I am sure there is a good reason.</p>
+		</p>
+			There are lots of other interesting facts like that in here, if you poke around for them.  Please share if you find any!
+			<h3>What does data.gov.il say about this data? </h3>  
+
+
+						<p class="rtl">משרד החקלאות ופיתוח הכפר
+			</p>
+				<p class="rtl">
+איסוף יומי של המחירים הסיטונאים של פירות וירקות, בשלושת השווקים הסיטונאים הגדולים: חיפה, צריפין וירושלים.
+נתוני המחירים הנאספים מתפרסמים מדי יום במהלך שעות הבוקר. כמו כן, הם מועברים למנויים באופן שוטף.
+			</p>
+			<h3> Got questions or comments?</h3>
+				<p>Cool!  Find some way to let me know.  All the code for this page is available on <a href="https://github.com/djacobs7/food_prices">github</a> </p>
+		</section>
+		<footer>
+			<p><small>Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+		</footer>
+    </div>
+	</body>
+  </html>
