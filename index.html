@@ -7,11 +7,15 @@
      <script src="jquery-1.8.0.min.js"></script>
      <title>Food Prices</title>
 
-
+<link rel="stylesheet" href="stylesheets/styles.css">
 <style>
 
-body {
+/*body {
 	font-family: Verdana;
+}
+*/
+.rtl {
+	direction: rtl;
 }
 
 .axis path,
@@ -34,19 +38,18 @@ body {
 .currentItem:hover{
 	fill: brown;
 }
-
+/*
 #content {
 	width: 80%;
 	margin: auto;
 }
-
-.metro {
+*/
+/*.metro {
   display: inline-block;
   padding: 10px;
   margin: 3px;
   background: #08C;
 
-  /* Font styles */
   color: white;
   font-weight: bold;
   text-decoration: none;
@@ -55,7 +58,7 @@ float:left;
 clear:both;
 
 direction: rtl;
-}
+}*/
 </style>
 <script>
 
@@ -177,7 +180,7 @@ $(document).ready(function(){
 	});
 
    //Create the SVG graph.
-   var svg = d3.select("#chart").append("svg").attr("width", "100%").attr("height", "100%");
+   var svg = d3.select("#chart").append("svg").attr("width", "100%").attr("height", "450px");
 
 	function filterData( data, shuk, type, strain ){
 		return data.filter( function( item ){
@@ -264,12 +267,12 @@ dataToDraw = filterData.apply( {}, [ data, shuk, type, strain ] );
 		var meanMonthlyValues = meanMonthlyValue( dataToDraw );
 		$("#choice_specific").html(
 			dataToDraw[0].name + " " + "<br/>" +
-			"mean price: " + meanPrice( dataToDraw.map( function(k){ return k[yValueKey] } ) ).toFixed(2) + "₪   " +
+			"mean price: " + meanPrice( dataToDraw.map( function(k){ return k[yValueKey] } ) ).toFixed(2) + "₪<br/>   " +
 			"median price: " + medianPrice( dataToDraw.map( function(k){ return k[yValueKey] } ) ).toFixed(2) + "₪<br/>" +
-			"best month: " + monthNames[meanMonthlyValues[0].key] + " " + meanMonthlyValues[0].values.toFixed(2) + "₪    " +
+			"best month: " + monthNames[meanMonthlyValues[0].key] + " " + meanMonthlyValues[0].values.toFixed(2) + "₪ <br/>" +
 			"worst month: " + monthNames[meanMonthlyValues[meanMonthlyValues.length-1].key] + " " + meanMonthlyValues[meanMonthlyValues.length-1].values.toFixed(2) + "₪"
 			
-		).addClass("metro");
+		);
 			
 			
 if ( true ){
@@ -298,8 +301,7 @@ if ( true ){
 		$("#point_specific").html(
 				
 				monthNames[ date.getMonth() ] + ' ' +date.getFullYear() +
-				"\n " + value + "₪" + 
-				"\n " + name
+				"\n " + value + "₪"
 				
 		);
 	}
@@ -393,28 +395,68 @@ var svgYAxis = svg.append("svg:g").attr("class", "axis").attr("transform", "tran
    </head>
    <body>
 	
-
-	<div id="content">
-	<h1>
-		Food Prices in Israel
-	</h1>
-		<select id="typecombobox">
-		</select>
-		<select id="locationcombobox">
-		</select>
-		<select id="marketscombobox">
-		</select>
-		<div id="information">
-			<div id="point_specific" class="metro">
+	<div class="wrapper">
+		<header>
+			<h1>
+				Food Prices in Israel
+			</h1>
+			<p>
+			Type: <select id="typecombobox">
+			</select><br/>
+			Location: <select id="locationcombobox">
+			</select></br>
+			Market: <select id="marketscombobox">
+			</select>
+			<div id="information">
+				<div id="choice_specific">
+				</div>
+				<div id="point_specific" >
+				</div>
 			</div>
-			<div id="choice_specific">
-			</div>
-		</div>
+			</p>
+			<p>
+				Go ahead and play around with the choices for <strong>type</strong>,  <strong>location</strong> and  <strong>market</strong> to see food prices at different markets throughout Israel over the last 3 years.
+			</p>
+		</header>
+		<section>
+			<div id="chart"></div>
+			
+			<h3>What is this?</h3>			
+			<p>
+				Every month or so the Israeli department of argiculture goes throughout the country buying vegetables at various markets throughout the country. 
+			
+				They post this data publically here <a href="http://data.gov.il/dataset/346">data.gov.il</a>.
+				 The data for these graphs was last July 2012.
+			</p>
+			
+			<h3> What should I do?</h3>
+			
+			<p>
+				Go ahead and play around with the choices for <strong>type</strong>,  <strong>location</strong> and  <strong>market</strong> to see food prices at different markets throughout Israel over the last 3 years.
+			</p>
+			<p>
+				You will notice that soon foods behave periodically and some do not.  The seedless watermelon is very consistent year to year; eggplant is much less so. 
+				 Use this to figure out when a fruit or vegetable of your choice is in season.
+			</p>
+			<p> You can also see for yourself if shopping in Jerusalem is cheaper than in Tel Aviv; or if going to the shuk is really that much cheaper than going to supersal.
+			<h3>Whats up with the sweet potato?</h3>
+			If you look at sweet potato prices, you will see they appear to grow exponentially over the last few months.  I have no theory for why this is, but I am sure there is a good reason.</p>
+			
+			<h3>What does data.gov.il say about this data? </h3>  
 
 
-
-		<div id="chart"></div>
-	</div>
-
-    </body>
+						<p class="rtl">משרד החקלאות ופיתוח הכפר
+			</p>
+				<p class="rtl">
+איסוף יומי של המחירים הסיטונאים של פירות וירקות, בשלושת השווקים הסיטונאים הגדולים: חיפה, צריפין וירושלים.
+נתוני המחירים הנאספים מתפרסמים מדי יום במהלך שעות הבוקר. כמו כן, הם מועברים למנויים באופן שוטף.
+			</p>
+			<h3> Got questions or comments?</h3>
+				<p>Cool!  Find some way to let me know.  All the code for this page is available on <a href="https://github.com/djacobs7/food_prices">github</a> </p>
+		</section>
+		<footer>
+			<p><small>Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+		</footer>
+    </div>
+	</body>
   </html>
