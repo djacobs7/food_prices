@@ -3,6 +3,8 @@
    <head>
      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
  
+	<meta charset="UTF-8">
+
      <script src="http://d3js.org/d3.v2.js"></script>
      <script src="jquery-1.8.0.min.js"></script>
      <title>Food Prices</title>
@@ -133,7 +135,13 @@ $(document).ready(function(){
 			var marketKey = markets[i];
 			o[marketKey] = parseFloat( o[marketKey] );
 		}
-		o["date"]  = new Date(Date.parse(o["חודש"],"yyyy/MM"));
+		
+		
+		var dateString = o["חודש"];
+		//format: "yyyy/MM"
+		var dateArr = dateString.split("/");
+		
+		o["date"]  = new Date(dateArr[0], dateArr[1]);
 		
 		o["name"] = o["שם"]
 		return o;
@@ -253,8 +261,8 @@ dataToDraw = filterData.apply( {}, [ data, shuk, type, strain ] );
 			}
 		}
 
-		var startDate = new Date( Date.parse( "2008/06","yyyy/MM"));
-		var endDate = new Date( Date.parse( "2012/12","yyyy/MM"));
+		var startDate = new Date( 2008, 6);
+		var endDate = new Date(2012,12);
 		var timeAxis = d3.time.scale().domain( [ startDate, endDate ] ).range( [0, graphWidth] );
 
 		var yAxis = d3.scale.linear().domain( [ 0, maxData ] ).range([ graphHeight, 0 ]); 
