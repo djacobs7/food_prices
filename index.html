@@ -67,6 +67,8 @@ $(document).ready(function(){
  d3.text("food_prices.csv", function(unparsedData)
   {
 	
+	d3.select("#please_wait").remove();
+	
 	var monthNames = [ "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December" ];
 	
@@ -432,6 +434,7 @@ var svgYAxis = svg.append("svg:g").attr("class", "axis").attr("transform", "tran
 
 		</header>
 		<section>
+			<div id="please_wait" style="margin:200px;">Please wait while graph loads...</div>
 			<div id="chart"></div>
 			
 			<h3>What is this?</h3>			
