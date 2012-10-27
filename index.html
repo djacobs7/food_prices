@@ -9,6 +9,11 @@
 
 
 <style>
+
+body {
+	font-family: Verdana;
+}
+
 .axis path,
 .axis line {
     fill: none;
@@ -29,6 +34,28 @@
 .currentItem:hover{
 	fill: brown;
 }
+
+#content {
+	width: 80%;
+	margin: auto;
+}
+
+.metro {
+  display: inline-block;
+  padding: 10px;
+  margin: 3px;
+  background: #08C;
+
+  /* Font styles */
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+
+float:left;
+clear:both;
+
+direction: rtl;
+}
 </style>
 <script>
 
@@ -37,6 +64,9 @@ $(document).ready(function(){
  d3.text("food_prices.csv", function(unparsedData)
   {
 	
+	var monthNames = [ "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December" ];
+	
 	//---------
 	//statistics
 	
@@ -44,6 +74,12 @@ $(document).ready(function(){
 		var filtered = arr.filter( function(a ){ return !isNaN( a ) } );
 		return filtered.reduce( function(acc,x){ return acc+x }, 0 ) / filtered.length;
 	}
+
+  function medianPrice( arr ){
+		var filtered = arr.filter( function(a ){ return !isNaN( a ) } );
+		var sorted = filtered.sort();
+		return sorted[ Math.floor( sorted.length / 2 ) ];
+  }
 	
 	function normalize( arr ){
 		var mean = meanPrice( arr );
@@ -141,7 +177,7 @@ $(document).ready(function(){
 	});
 
    //Create the SVG graph.
-   var svg = d3.select("body").append("svg").attr("width", "100%").attr("height", "100%");
+   var svg = d3.select("#chart").append("svg").attr("width", "100%").attr("height", "100%");
 
 	function filterData( data, shuk, type, strain ){
 		return data.filter( function( item ){
@@ -163,7 +199,7 @@ dataToDraw = filterData.apply( {}, [ data, shuk, type, strain ] );
    //Add data to the graph and call enter.
     
    //The height of the graph (without text).
-   var graphHeight = 450;
+   var graphHeight = 400;
    
 
 
@@ -227,12 +263,13 @@ dataToDraw = filterData.apply( {}, [ data, shuk, type, strain ] );
 		
 		var meanMonthlyValues = meanMonthlyValue( dataToDraw );
 		$("#choice_specific").html(
-			dataToDraw[0].name + " " + 
-			meanPrice( dataToDraw.map( function(k){ return k[yValueKey] } ) ) + 
-			"best:" + meanMonthlyValues[0].key + " " + meanMonthlyValues[0].values +
-			"worst:" + meanMonthlyValues[meanMonthlyValues.length-1].key + " " + meanMonthlyValues[meanMonthlyValues.length-1].values
+			dataToDraw[0].name + " " + "<br/>" +
+			"mean price: " + meanPrice( dataToDraw.map( function(k){ return k[yValueKey] } ) ).toFixed(2) + "₪   " +
+			"median price: " + medianPrice( dataToDraw.map( function(k){ return k[yValueKey] } ) ).toFixed(2) + "₪<br/>" +
+			"best month: " + monthNames[meanMonthlyValues[0].key] + " " + meanMonthlyValues[0].values.toFixed(2) + "₪    " +
+			"worst month: " + monthNames[meanMonthlyValues[meanMonthlyValues.length-1].key] + " " + meanMonthlyValues[meanMonthlyValues.length-1].values.toFixed(2) + "₪"
 			
-		);
+		).addClass("metro");
 			
 			
 if ( true ){
@@ -260,7 +297,7 @@ if ( true ){
 	function updateInformation(date, value, name){
 		$("#point_specific").html(
 				
-			date.getMonth() + '-' +date.getFullYear() +
+				monthNames[ date.getMonth() ] + ' ' +date.getFullYear() +
 				"\n " + value + "₪" + 
 				"\n " + name
 				
@@ -292,9 +329,7 @@ if ( true ){
 
 		dataEnter.append("circle").attr("cx", function(d, i){
 			return timeAxis( d["date"] ) + leftPadding;
-		}).attr("cy", function(d,i){
-			
-
+		}).attr("cy", function(d){
 			return yAxis( d[yValueKey ] );//graphHeight - d[yValueKey] * barHeightMultiplier;
 	   	}).attr( "r", function(d){
 			return 5;
@@ -358,23 +393,28 @@ var svgYAxis = svg.append("svg:g").attr("class", "axis").attr("transform", "tran
    </head>
    <body>
 	
+
+	<div id="content">
 	<h1>
 		Food Prices in Israel
 	</h1>
-	<div id="information">
-		<div id="point_specific">
-		</div>
-		<div id="choice_specific">
-		</div>
-	</div>
 		<select id="typecombobox">
 		</select>
 		<select id="locationcombobox">
 		</select>
 		<select id="marketscombobox">
 		</select>
+		<div id="information">
+			<div id="point_specific" class="metro">
+			</div>
+			<div id="choice_specific">
+			</div>
+		</div>
+
 
 
 		<div id="chart"></div>
+	</div>
+
     </body>
   </html>
